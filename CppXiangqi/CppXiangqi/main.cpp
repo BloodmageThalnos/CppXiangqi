@@ -18,7 +18,7 @@ void Game(){
 		// move a chess
 		case 1:{
 			puts("Input startx,starty,endx,endy,newstate.");
-			int sx=read(), sy=read(), ex=read(), ey=read(), nw=read();
+			char sx=read(), sy=read(), ex=read(), ey=read(), nw=read();
 			if(!moveAChess(Moves{sx, sy, ex, ey, nw}))goto dataerror;
 		}	break;
 		case 2:{

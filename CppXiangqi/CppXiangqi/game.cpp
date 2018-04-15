@@ -2,6 +2,7 @@
 
 State _;
 deque<State> deque_;
+Mana noMana, outMana;
 
 void State::show(){
 	const static char chessName[2][8][3]={"暗","帅","马","炮","兵","车","士","相","暗","将","馬","砲","卒","車","仕","象"};
@@ -25,28 +26,40 @@ void State::show(){
 }
 
 void State::init(){
-	memset(board, 0, sizeof board);
-	board[55]=board[61]=19;
-	board[28]=board[36]=21;
-	board[29]=board[35]=18;
-	board[30]=board[34]=23;
-	board[31]=board[33]=22;
-	board[32]=25;
-	for(int i=1; i<=9; i+=2)board[i+66]=20, board[105+i]=4;
-	board[120]=board[126]=3;
-	board[145]=board[153]=5;
-	board[146]=board[152]=2;
-	board[147]=board[151]=7;
-	board[148]=board[150]=6;
-	board[149]=9;
+	outMana.kind=32;
+	int t[188]={0};
+	t[55]=t[61]=19;
+	t[28]=t[36]=21;
+	t[29]=t[35]=18;
+	t[30]=t[34]=23;
+	t[31]=t[33]=22;
+	t[32]=25;
+	for(int i=1; i<=9; i+=2)t[i+66]=20, t[105+i]=4;
+	t[120]=t[126]=3;
+	t[145]=t[153]=5;
+	t[146]=t[152]=2;
+	t[147]=t[151]=7;
+	t[148]=t[150]=6;
+	t[149]=9;
+	for(int i=0, cnt[2]={0}; i<182; i++)if(t[i]){
+		Mana& m = na[!!(t[i]&16)][cnt[!!(t[i]&16)]++];
+		m.posx=i%13;
+		m.posy=i/13;
+		m.kind=t[i];
+		board[i]=&m;
+	}
+	else{
+		if(i%13<2 || i%13>10 || i/13<2 || i/13>10)board[i]=&outMana;
+		else board[i]=&noMana;
+	}
 	for(int i=0; i<2; i++)
 		hid[i][2]=hid[i][3]=hid[i][5]=hid[i][6]=2, hid[i][4]=5;
 	tothid[0]=tothid[1]=13;
 }
 
-int State::getRandom(int side){
+char State::getRandom(char side){
 	assert(tothid[side]);
-	int r = rand()%tothid[side]+1, choosed;
+	char r = rand()%tothid[side]+1, choosed;
 	for(choosed = 2; r>0; choosed++){
 		r-=hid[side][choosed];
 	}
@@ -54,12 +67,14 @@ int State::getRandom(int side){
 }
 
 void State::move(Moves m){
-	int startp = m.startx + 13*m.starty, endp = m.endx + 13*m.endy, bd = board[startp];
-	if(bd&8)board[endp]=bd;
-	else {
-		board[endp]=m.newchess;
-	}
-	board[startp]=0;
+	int startp = m.startx + 13*m.starty, endp = m.endx + 13*m.endy;
+	board[endp]->kind = 0;	// eaten
+	if(~board[startp]->kind&8)	// hidden
+		board[startp]->kind = m.newchess;
+	board[startp]->posx=m.endx;
+	board[startp]->posy=m.endy;
+	board[endp]=board[startp];
+	board[startp]=&noMana;	// empty
 }
 
 int Moves::format_and_check(){
