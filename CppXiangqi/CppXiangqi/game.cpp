@@ -68,13 +68,143 @@ char State::getRandom(char side){
 
 void State::move(Moves m){
 	int startp = m.startx + 13*m.starty, endp = m.endx + 13*m.endy;
-	board[endp]->kind = 0;	// eaten
+	board[endp]->kind = 0;		// eaten
 	if(~board[startp]->kind&8)	// hidden
 		board[startp]->kind = m.newchess;
 	board[startp]->posx=m.endx;
 	board[startp]->posy=m.endy;
 	board[endp]=board[startp];
-	board[startp]=&noMana;	// empty
+	board[startp]=&noMana;		// empty
+}
+
+// Huge function, CAUTION!
+// find out possible moves
+void State::calcMoves(){
+	for(char side=0; side<2; side++){
+		for(int i=0; i<16; i++)if(na[side][i].kind&7){
+			Mana& m = na[side][i];
+			m.Mov.clear();
+			switch(m.kind&7){
+			case 1:{	//shuai
+				char c, x=m.posx, y=m.posy;
+				c=get(x-1, y);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x-1,y,0});
+				c=get(x+1, y);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x+1,y,0});
+				c=get(x, y-1);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x,y-1,0});
+				c=get(x, y+1);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x,y+1,0});
+			}break;
+			case 2:{	//ma
+				char c, x=m.posx, y=m.posy;
+				c=get(x-1, y);
+				if(!c){
+					c=get(x-2, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y-1,0});
+					c=get(x-2, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y+1,0});
+				}
+				c=get(x+1, y);
+				if(!c){
+					c=get(x+2, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y-1,0});
+					c=get(x+2, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y+1,0});
+				}
+				c=get(x, y-1);
+				if(!c){
+					c=get(x-1, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y-2,0});
+					c=get(x+1, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y-2,0});
+				}
+				c=get(x, y+1);
+				if(!c){
+					c=get(x-1, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y+2,0});
+					c=get(x+1, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y+2,0});
+				}
+			}break;
+			case 3:{ // pao
+				char c, x, y=m.posy;
+				for(x=m.posx-1; ; x--){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(x--; !(c=get(x, y)); x--);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{m.posx,y,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+				}
+				for(x=m.posx+1; ; x++){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(x++; !(c=get(x, y)); x++);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{m.posx,y,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+				}
+				x=m.posx;
+				for(y=m.posy-1; ; y--){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(y--; !(c=get(x, y)); y--);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{x,m.posy,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+				}
+				for(y=m.posy+1; ; y++){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(y++; !(c=get(x, y)); y++);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{x,m.posy,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+				}
+			}break;
+			case 4:{
+
+			}break;
+			case 5:{
+
+			}break;
+			case 6:{
+
+			}break;
+			case 7:{
+
+			}}
+		}
+	}
 }
 
 int Moves::format_and_check(){
@@ -86,6 +216,7 @@ void initEverything(){
 	srand(time(0));
 
 	_.init();
+	_.calcMoves();
 	deque_.push_back(_);
 }
 
@@ -108,6 +239,7 @@ bool moveAChess(Moves m){
 		m.newchess=_.getRandom(!!(moved&16));
 	}
 	_.move(m);
+	_.calcMoves();
 	deque_.push_back(_);
 	return true;
 }

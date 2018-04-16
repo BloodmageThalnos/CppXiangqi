@@ -9,6 +9,7 @@ void initEverything();
 void showPanel();
 // move a chess, return success or not
 bool moveAChess(Moves);
+// return to last move, can be done several times
 void redoLastmove();
 
 struct Moves{
@@ -30,7 +31,6 @@ struct Mana{
 	char posx, posy;
 	vector<Moves>Mov;
 	Mana() :Mov(){}
-	void calc(State*);
 };
 
 struct State{
@@ -49,6 +49,8 @@ struct State{
 	void show();
 	// put the chesses by rule when the game starts
 	void init();
+	// find out possible moves
+	void calcMoves();
 	// update movement
 	void move(Moves m);
 	// get a random hidden char
