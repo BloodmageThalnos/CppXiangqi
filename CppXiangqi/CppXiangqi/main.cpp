@@ -19,13 +19,13 @@ void Game(){
 		case 1:{
 			puts("Input startx,starty,endx,endy,newstate.");
 			char sx=read(), sy=read(), ex=read(), ey=read(), nw=read();
-			if(!moveAChess(Moves{sx, sy, ex, ey, nw}))goto dataerror;
+			if(!moveAChess(Moves{sx+1, sy+1, ex+1, ey+1, nw}))goto dataerror;
 		}	break;
 		case 2:{
 			redoLastmove();
 		}	break;
 		case 3:{
-
+			aiDoIt(RED);
 		}	break;
 		case 4:{
 

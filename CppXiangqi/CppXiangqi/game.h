@@ -11,13 +11,15 @@ void showPanel();
 bool moveAChess(Moves);
 // return to last move, can be done several times
 void redoLastmove();
+// calculate best move for RED/BLACK
+void aiDoIt(char side);
 
 struct Moves{
 	char startx, starty;
 	char endx, endy;
 	char newchess;
 	// convert from input scale to data scale
-	int format_and_check();
+	int check();
 };
 
 // a kind of blueviolet hexagen crystal
@@ -56,5 +58,7 @@ struct State{
 	// find out possible moves
 	void calcMoves();
 	// find out the score of nowstate
-	int getScore();
+	int getScore(char side);
+	// solve some p
+	void deepCopy();
 };
