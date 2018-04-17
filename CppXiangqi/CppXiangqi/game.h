@@ -49,10 +49,12 @@ struct State{
 	void show();
 	// put the chesses by rule when the game starts
 	void init();
-	// find out possible moves
-	void calcMoves();
 	// update movement
 	void move(Moves m);
 	// get a random hidden char
 	char getRandom(char);
+	// find out possible moves
+	void calcMoves();
+	// find out the score of nowstate
+	int getScore();
 };
