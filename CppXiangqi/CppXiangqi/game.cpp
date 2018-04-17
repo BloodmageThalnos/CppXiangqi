@@ -6,9 +6,9 @@ Mana noMana, outMana;
 
 // for simplicity, it is static now, but should be dynamic.
 const int score_Chess[16]={0,0,8,12,8,12,6,6,0,1000,10,10,3,18,3,2};
+const char chessName[2][8][3]={"暗","帅","马","炮","兵","车","士","相","暗","将","馬","砲","卒","車","仕","象"};
 
 void State::show(){
-	const static char chessName[2][8][3]={"暗","帅","马","炮","兵","车","士","相","暗","将","馬","砲","卒","車","仕","象"};
 	puts("1  2  3  4  5  6  7  8  9");
 	for(int y=2; y<12; y++){
 		setConsoleColor(0, 15);
@@ -86,22 +86,23 @@ void State::calcMoves(){
 	for(char side=0; side<2; side++){
 		for(int i=0; i<16; i++)if(na[side][i].kind&7){
 			Mana& m = na[side][i];
-			m.Mov.clear();
+			//if(m.head)delete m.head;
+			m.head=NULL;
 			switch(m.kind&7){
 			case 1:{	//shuai
 				char c, x=m.posx, y=m.posy;
 				c=get(x-1, y);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-					m.Mov.push_back(Moves{x,y,x-1,y,0});
+					m.head = new Moves{x,y,x-1,y,0,m.head};
 				c=get(x+1, y);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-					m.Mov.push_back(Moves{x,y,x+1,y,0});
+					m.head = new Moves{x,y,x+1,y,0,m.head};
 				c=get(x, y-1);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-					m.Mov.push_back(Moves{x,y,x,y-1,0});
+					m.head = new Moves{x,y,x,y-1,0,m.head};
 				c=get(x, y+1);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-					m.Mov.push_back(Moves{x,y,x,y+1,0});
+					m.head = new Moves{x,y,x,y+1,0,m.head};
 			}break;
 			case 2:{	//ma
 				char c, x=m.posx, y=m.posy;
@@ -109,37 +110,37 @@ void State::calcMoves(){
 				if(!c){
 					c=get(x-2, y-1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-2,y-1,0});
+						m.head = new Moves{x,y,x-2,y-1,0,m.head};
 					c=get(x-2, y+1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-2,y+1,0});
+						m.head = new Moves{x,y,x-2,y+1,0,m.head};
 				}
 				c=get(x+1, y);
 				if(!c){
 					c=get(x+2, y-1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+2,y-1,0});
+						m.head = new Moves{x,y,x+2,y-1,0,m.head};
 					c=get(x+2, y+1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+2,y+1,0});
+						m.head = new Moves{x,y,x+2,y+1,0,m.head};
 				}
 				c=get(x, y-1);
 				if(!c){
 					c=get(x-1, y-2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-1,y-2,0});
+						m.head = new Moves{x,y,x-1,y-2,0,m.head};
 					c=get(x+1, y-2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+1,y-2,0});
+						m.head = new Moves{x,y,x+1,y-2,0,m.head};
 				}
 				c=get(x, y+1);
 				if(!c){
 					c=get(x-1, y+2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-1,y+2,0});
+						m.head = new Moves{x,y,x-1,y+2,0,m.head};
 					c=get(x+1, y+2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+1,y+2,0});
+						m.head = new Moves{x,y,x+1,y+2,0,m.head};
 				}
 			}break;
 			case 3:{ // pao
@@ -150,11 +151,11 @@ void State::calcMoves(){
 						if(c&7){
 							for(x--; !(c=get(x, y)); x--);
 							if((c>>4)==!side)	// is a opponent chess
-								m.Mov.push_back(Moves{m.posx,y,x,y});
+								m.head = new Moves{m.posx,y,x,y,0,m.head};
 						}// else out of board
 						break;
 					}
-					else m.Mov.push_back(Moves{m.posx,y,x,y});
+					else m.head = new Moves{m.posx,y,x,y,0,m.head};
 				}
 				for(x=m.posx+1; ; x++){
 					c=get(x, y);
@@ -162,11 +163,11 @@ void State::calcMoves(){
 						if(c&7){
 							for(x++; !(c=get(x, y)); x++);
 							if((c>>4)==!side)	// is a opponent chess
-								m.Mov.push_back(Moves{m.posx,y,x,y});
+								m.head = new Moves{m.posx,y,x,y,0,m.head};
 						}// else out of board
 						break;
 					}
-					else m.Mov.push_back(Moves{m.posx,y,x,y});
+					else m.head = new Moves{m.posx,y,x,y,0,m.head};
 				}
 				x=m.posx;
 				for(y=m.posy-1; ; y--){
@@ -175,11 +176,11 @@ void State::calcMoves(){
 						if(c&7){
 							for(y--; !(c=get(x, y)); y--);
 							if((c>>4)==!side)	// is a opponent chess
-								m.Mov.push_back(Moves{x,m.posy,x,y});
+								m.head = new Moves{x,m.posy,x,y,0,m.head};
 						}// else out of board
 						break;
 					}
-					else m.Mov.push_back(Moves{x,m.posy,x,y});
+					else m.head = new Moves{x,m.posy,x,y,0,m.head};
 				}
 				for(y=m.posy+1; ; y++){
 					c=get(x, y);
@@ -187,25 +188,25 @@ void State::calcMoves(){
 						if(c&7){
 							for(y++; !(c=get(x, y)); y++);
 							if((c>>4)==!side)	// is a opponent chess
-								m.Mov.push_back(Moves{x,m.posy,x,y});
+								m.head = new Moves{x,m.posy,x,y,0,m.head};
 						}// else out of board
 						break;
 					}
-					else m.Mov.push_back(Moves{x,m.posy,x,y});
+					else m.head = new Moves{x,m.posy,x,y,0,m.head};
 				}
 			}break;
 			case 4:{	//bin
 				char c, x=m.posx, y=m.posy;
 				c=get(x, y+side+side-1);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-					m.Mov.push_back(Moves{x,y,x,y+side+side-1,0});
+					m.head = new Moves{x,y,x,y+side+side-1,0,m.head};
 				if((!side && y<=7)||(side && y>=8)){
 					c=get(x-1, y);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-1,y,0});
+						m.head = new Moves{x,y,x-1,y,0,m.head};
 					c=get(x+1, y);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+1,y,0});
+						m.head = new Moves{x,y,x+1,y,0,m.head};
 				}
 			}break;
 			case 5:{	//che
@@ -214,38 +215,38 @@ void State::calcMoves(){
 					c=get(x, y);
 					if(c){// is a chess or out of board
 						if((c>>4)==!side)	// is a opponent chess
-							m.Mov.push_back(Moves{m.posx,y,x,y});
+							m.head = new Moves{m.posx,y,x,y,0,m.head};
 						break;
 					}
-					else m.Mov.push_back(Moves{m.posx,y,x,y});
+					else m.head = new Moves{m.posx,y,x,y,0,m.head};
 				}
 				for(x=m.posx+1; ; x++){
 					c=get(x, y);
 					if(c){// is a chess or out of board
 						if((c>>4)==!side)	// is a opponent chess
-							m.Mov.push_back(Moves{m.posx,y,x,y});
+							m.head = new Moves{m.posx,y,x,y,0,m.head};
 						break;
 					}
-					else m.Mov.push_back(Moves{m.posx,y,x,y});
+					else m.head = new Moves{m.posx,y,x,y,0,m.head};
 				}
 				x=m.posx;
 				for(y=m.posy-1; ; y--){
 					c=get(x, y);
 					if(c){// is a chess or out of board
 						if((c>>4)==!side)	// is a opponent chess
-							m.Mov.push_back(Moves{x,m.posy,x,y});
+							m.head = new Moves{x,m.posy,x,y,0,m.head};
 						break;
 					}
-					else m.Mov.push_back(Moves{x,m.posy,x,y});
+					else m.head = new Moves{x,m.posy,x,y,0,m.head};
 				}
 				for(y=m.posy+1; ; y++){
 					c=get(x, y);
 					if(c){// is a chess or out of board
 						if((c>>4)==!side)	// is a opponent chess
-							m.Mov.push_back(Moves{x,m.posy,x,y});
+							m.head = new Moves{x,m.posy,x,y,0,m.head};
 						break;
 					}
-					else m.Mov.push_back(Moves{x,m.posy,x,y});
+					else m.head = new Moves{x,m.posy,x,y,0,m.head};
 				}
 			}break;
 			case 6:{	//shi
@@ -253,21 +254,21 @@ void State::calcMoves(){
 				if(~m.kind&8){			// hidden
 					c=get(6, y+side+side-1);
 					if(!c || (c>>4)==!side)
-						m.Mov.push_back(Moves{x,y,6,y+side+side-1});
+						m.head = new Moves{x,y,6,y+side+side-1,0,m.head};
 				}
 				else{
 					c=get(x-1, y-1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-1,y-1,0});
+						m.head = new Moves{x,y,x-1,y-1,0,m.head};
 					c=get(x+1, y-1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+1,y-1,0});
+						m.head = new Moves{x,y,x+1,y-1,0,m.head};
 					c=get(x-1, y+1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-1,y+1,0});
+						m.head = new Moves{x,y,x-1,y+1,0,m.head};
 					c=get(x+1, y+1);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+1,y+1,0});
+						m.head = new Moves{x,y,x+1,y+1,0,m.head};
 				}
 			}break;
 			case 7:{	//xiang
@@ -275,22 +276,22 @@ void State::calcMoves(){
 				if(!get(x-1, y-1)){
 					c=get(x-2, y-2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-2,y-2,0});
+						m.head = new Moves{x,y,x-2,y-2,0,m.head};
 				}
 				if(!get(x-1, y+1)){
 					c=get(x-2, y+2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x-2,y+2,0});
+						m.head = new Moves{x,y,x-2,y+2,0,m.head};
 				}
 				if(!get(x+1, y-1)){
 					c=get(x+2, y-2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+2,y-2,0});
+						m.head = new Moves{x,y,x+2,y-2,0,m.head};
 				}
 				if(!get(x+1, y+1)){
 					c=get(x+2, y+2);
 					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
-						m.Mov.push_back(Moves{x,y,x+2,y+2,0});
+						m.head = new Moves{x,y,x+2,y+2,0,m.head};
 				}
 			}}
 		}
@@ -300,16 +301,18 @@ void State::calcMoves(){
 // find out the score of nowstate, from the red side
 int State::getScore(char side){
 	int res=0;
-	// this->show();
 	for(int i=0; i<16; i++){
 		res += score_Chess[na[side][i].kind&15];
 		res -= score_Chess[na[!side][i].kind&15];
 	}
+	/*if(board[3+2*13]->kind & 8){
+		show(), printf("\n%d\n", res);
+	}*/
 	return res;
 }
 
 void State::deepCopy(){
-	for(int i=0; i<2; i++)for(int j=0; j<16; j++){
+	for(int i=0; i<2; i++)for(int j=0; j<16; j++)if(na[i][j].kind){
 		board[na[i][j].posx+13*na[i][j].posy]=&na[i][j];
 	}
 }
@@ -368,19 +371,19 @@ pair<int, Moves> Search(State s, Moves* m, char side, int depth){
 	for(int i=0; i<16; i++){
 		int k=s.na[side][i].kind;
 		if(!k)continue;
-		for(auto nowm:s.na[side][i].Mov){
+		for(Moves* nowm = s.na[side][i].head; nowm; nowm=nowm->next){
 			int nowscore;
-			if(k&8)nowscore=-Search(s, &nowm, !side, depth-1).first;
+			if(k&8)nowscore=-Search(s, nowm, !side, depth-1).first;
 			else{
+				Moves nowmove = *nowm;
 				nowscore=0;
 				for(int i=1; i<8; i++)if(s.hid[side][i]){
-					nowm.newchess=(side<<4)|8|i;
-					nowscore-=s.hid[side][i]*Search(s, &nowm, !side, depth-1).first;
+					nowmove.newchess=(side<<4)|8|i;
+					nowscore-=s.hid[side][i]*Search(s, &nowmove, !side, depth-1).first;
 				}
 				nowscore/=s.tothid[side];
 			}
-			// ("%d (%d,%d)->(%d,%d)\n", nowscore, nowm.startx, nowm.starty, nowm.endx, nowm.endy);
-			if(maxscore<nowscore)maxscore=nowscore, maxmove=nowm;
+			if(maxscore<nowscore)maxscore=nowscore, maxmove=*nowm;
 		}
 	}
 	return make_pair(maxscore,maxmove);

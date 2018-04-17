@@ -20,6 +20,10 @@ struct Moves{
 	char newchess;
 	// convert from input scale to data scale
 	int check();
+	Moves* next;
+	~Moves(){
+		//if(next)delete next;
+	}
 };
 
 // a kind of blueviolet hexagen crystal
@@ -31,8 +35,10 @@ struct Mana{
 	//  5 bit: 1 out_of_board
 	char kind;
 	char posx, posy;
-	vector<Moves>Mov;
-	Mana() :Mov(){}
+	Moves* head;
+	~Mana(){
+		//if(head)delete head;
+	}
 };
 
 struct State{
