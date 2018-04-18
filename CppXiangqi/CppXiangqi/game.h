@@ -20,7 +20,6 @@ struct Moves{
 	char newchess;
 	// convert from input scale to data scale
 	int check();
-	Moves* next;
 	~Moves(){
 		//if(next)delete next;
 	}
@@ -35,7 +34,6 @@ struct Mana{
 	//  5 bit: 1 out_of_board
 	char kind;
 	char posx, posy;
-	Moves* head;
 	~Mana(){
 		//if(head)delete head;
 	}
@@ -43,16 +41,18 @@ struct Mana{
 
 struct State{
 	// the board
-	Mana* board[182];
+	Mana* board[14][13];
 	// number of hidden chess, 0R1B
 	char hid[2][8];
 	// total hidden, 0R1B
 	int tothid[2];
 	// 32 chesses
 	Mana na[2][16];
+	// captured by one side
+	char capture[2][14][13];
 
 	// inline function
-	char get(char x, char y){ return board[x+13*y]->kind; }
+	char get(char x, char y){ return board[y][x]->kind; }
 	// print onto the screen
 	void show();
 	// put the chesses by rule when the game starts
@@ -62,9 +62,9 @@ struct State{
 	// get a random hidden char
 	char getRandom(char);
 	// find out possible moves
-	void calcMoves();
+	void calcMoves(list<Moves>&, char);
 	// find out the score of nowstate
-	int getScore(char side);
+	int getScore(char);
 	// solve some p
 	void deepCopy();
 };

@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <queue>
 #include <map>
+#include <list>
 #include <utility>
 #include <assert.h>
 #include <conio.h>
