@@ -5,10 +5,19 @@ deque<State> deque_;
 Mana noMana, outMana;
 
 // for simplicity, it is static now, but should be dynamic.
+<<<<<<< HEAD
+<<<<<<< HEAD
 const int score_Chess[16]={0,0,30,60,30,80,30,30,0,1000,80,90,30,180,60,30};
 const char chessName[2][8][3]={"暗","帅","马","炮","兵","车","士","相","暗","将","馬","砲","卒","車","仕","象"};
+=======
+const int score_Chess[16]={0,0,8,12,8,12,6,6,0,1000,10,10,3,18,3,2};
+>>>>>>> parent of 664d09e... version 1.01
+=======
+const int score_Chess[16]={0,0,8,12,8,12,6,6,0,1000,10,10,3,18,3,2};
+>>>>>>> parent of 664d09e... version 1.01
 
 void State::show(){
+	const static char chessName[2][8][3]={"暗","帅","马","炮","兵","车","士","相","暗","将","馬","砲","卒","車","仕","象"};
 	puts("1  2  3  4  5  6  7  8  9");
 	for(int y=2; y<12; y++){
 		setConsoleColor(0, 15);
@@ -83,6 +92,7 @@ void State::move(Moves m){
 
 // Huge function, CAUTION!
 // find out possible moves
+<<<<<<< HEAD
 void State::calcMoves(list<Moves>& L, char side){
 	memset(capture, 0, sizeof capture);
 	for(int i=0; i<16; i++)if(na[side][i].posx){
@@ -137,12 +147,128 @@ void State::calcMoves(list<Moves>& L, char side){
 				if(!c || (c>>4)==!side){	// c is empty, or c is an opponent move
 					L.push_back(Moves{x,y,x+2,y+1,0});
 					capture[side][x+2][y+1]++;
+=======
+void State::calcMoves(){
+	for(char side=0; side<2; side++){
+		for(int i=0; i<16; i++)if(na[side][i].kind&7){
+			Mana& m = na[side][i];
+			m.Mov.clear();
+			switch(m.kind&7){
+			case 1:{	//shuai
+				char c, x=m.posx, y=m.posy;
+				c=get(x-1, y);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x-1,y,0});
+				c=get(x+1, y);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x+1,y,0});
+				c=get(x, y-1);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x,y-1,0});
+				c=get(x, y+1);
+				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+					m.Mov.push_back(Moves{x,y,x,y+1,0});
+			}break;
+			case 2:{	//ma
+				char c, x=m.posx, y=m.posy;
+				c=get(x-1, y);
+				if(!c){
+					c=get(x-2, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y-1,0});
+					c=get(x-2, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y+1,0});
+				}
+				c=get(x+1, y);
+				if(!c){
+					c=get(x+2, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y-1,0});
+					c=get(x+2, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y+1,0});
+				}
+				c=get(x, y-1);
+				if(!c){
+					c=get(x-1, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y-2,0});
+					c=get(x+1, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y-2,0});
+				}
+				c=get(x, y+1);
+				if(!c){
+					c=get(x-1, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y+2,0});
+					c=get(x+1, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y+2,0});
+				}
+			}break;
+			case 3:{ // pao
+				char c, x, y=m.posy;
+				for(x=m.posx-1; ; x--){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(x--; !(c=get(x, y)); x--);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{m.posx,y,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+				}
+				for(x=m.posx+1; ; x++){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(x++; !(c=get(x, y)); x++);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{m.posx,y,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+				}
+				x=m.posx;
+				for(y=m.posy-1; ; y--){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(y--; !(c=get(x, y)); y--);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{x,m.posy,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+				}
+				for(y=m.posy+1; ; y++){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if(c&7){
+							for(y++; !(c=get(x, y)); y++);
+							if((c>>4)==!side)	// is a opponent chess
+								m.Mov.push_back(Moves{x,m.posy,x,y});
+						}// else out of board
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 				}
 			}
 			c=get(x, y-1);
 			if(!c){
 				c=get(x-1, y-2);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+<<<<<<< HEAD
 					L.push_back(Moves{x,y,x-1,y-2,0});
 				c=get(x+1, y-2);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
@@ -155,6 +281,7 @@ void State::calcMoves(list<Moves>& L, char side){
 					L.push_back(Moves{x,y,x-1,y+2,0});
 				c=get(x+1, y+2);
 				if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+<<<<<<< HEAD
 					L.push_back(Moves{x,y,x+1,y+2,0});
 			}
 		}break;
@@ -169,6 +296,33 @@ void State::calcMoves(list<Moves>& L, char side){
 							L.push_back(Moves{m.posx,y,x,y,0});
 					}// else out of board
 					break;
+=======
+=======
+>>>>>>> parent of 664d09e... version 1.01
+					m.Mov.push_back(Moves{x,y,x,y+side+side-1,0});
+				if((!side && y<=7)||(side && y>=8)){
+					c=get(x-1, y);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y,0});
+					c=get(x+1, y);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y,0});
+				}
+			}break;
+			case 5:{	//che
+				char c, x, y=m.posy;
+				for(x=m.posx-1; ; x--){
+					c=get(x, y);
+					if(c){// is a chess or out of board
+						if((c>>4)==!side)	// is a opponent chess
+							m.Mov.push_back(Moves{m.posx,y,x,y});
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 				}
 				else L.push_back(Moves{m.posx,y,x,y,0});
 			}
@@ -178,9 +332,22 @@ void State::calcMoves(list<Moves>& L, char side){
 					if(c&7){
 						for(x++; !(c=get(x, y)); x++);
 						if((c>>4)==!side)	// is a opponent chess
+<<<<<<< HEAD
+<<<<<<< HEAD
 							L.push_back(Moves{m.posx,y,x,y,0});
 					}// else out of board
 					break;
+=======
+=======
+>>>>>>> parent of 664d09e... version 1.01
+							m.Mov.push_back(Moves{m.posx,y,x,y});
+						break;
+					}
+					else m.Mov.push_back(Moves{m.posx,y,x,y});
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 				}
 				else L.push_back(Moves{m.posx,y,x,y,0});
 			}
@@ -191,9 +358,22 @@ void State::calcMoves(list<Moves>& L, char side){
 					if(c&7){
 						for(y--; !(c=get(x, y)); y--);
 						if((c>>4)==!side)	// is a opponent chess
+<<<<<<< HEAD
+<<<<<<< HEAD
 							L.push_back(Moves{x,m.posy,x,y,0});
 					}// else out of board
 					break;
+=======
+=======
+>>>>>>> parent of 664d09e... version 1.01
+							m.Mov.push_back(Moves{x,m.posy,x,y});
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 				}
 				else L.push_back(Moves{x,m.posy,x,y,0});
 			}
@@ -203,6 +383,8 @@ void State::calcMoves(list<Moves>& L, char side){
 					if(c&7){
 						for(y++; !(c=get(x, y)); y++);
 						if((c>>4)==!side)	// is a opponent chess
+<<<<<<< HEAD
+<<<<<<< HEAD
 							L.push_back(Moves{x,m.posy,x,y,0});
 					}// else out of board
 					break;
@@ -260,6 +442,62 @@ void State::calcMoves(list<Moves>& L, char side){
 					if((c>>4)==!side)	// is a opponent chess
 						L.push_back(Moves{x,m.posy,x,y,0});
 					break;
+=======
+=======
+>>>>>>> parent of 664d09e... version 1.01
+							m.Mov.push_back(Moves{x,m.posy,x,y});
+						break;
+					}
+					else m.Mov.push_back(Moves{x,m.posy,x,y});
+				}
+			}break;
+			case 6:{	//shi
+				char c, x=m.posx, y=m.posy;
+				if(~m.kind&8){			// hidden
+					c=get(6, y+side+side-1);
+					if(!c || (c>>4)==!side)
+						m.Mov.push_back(Moves{x,y,6,y+side+side-1});
+				}
+				else{
+					c=get(x-1, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y-1,0});
+					c=get(x+1, y-1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y-1,0});
+					c=get(x-1, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-1,y+1,0});
+					c=get(x+1, y+1);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+1,y+1,0});
+				}
+			}break;
+			case 7:{	//xiang
+				char c, x=m.posx, y=m.posy;
+				if(!get(x-1, y-1)){
+					c=get(x-2, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y-2,0});
+				}
+				if(!get(x-1, y+1)){
+					c=get(x-2, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x-2,y+2,0});
+				}
+				if(!get(x+1, y-1)){
+					c=get(x+2, y-2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y-2,0});
+				}
+				if(!get(x+1, y+1)){
+					c=get(x+2, y+2);
+					if(!c || (c>>4)==!side)	// c is empty, or c is an opponent move
+						m.Mov.push_back(Moves{x,y,x+2,y+2,0});
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 				}
 				else L.push_back(Moves{x,m.posy,x,y,0});
 			}
@@ -316,6 +554,7 @@ void State::calcMoves(list<Moves>& L, char side){
 // find out the score of nowstate, from the red side
 int State::getScore(char side){
 	int res=0;
+	// this->show();
 	for(int i=0; i<16; i++){
 		if(na[side][i].posx){	// exists
 			res += score_Chess[na[side][i].kind&15];
@@ -334,8 +573,16 @@ int State::getScore(char side){
 }
 
 void State::deepCopy(){
+<<<<<<< HEAD
+<<<<<<< HEAD
 	for(int i=0; i<2; i++)for(int j=0; j<16; j++)if(na[i][j].posx){
 		board[na[i][j].posy][na[i][j].posx]=&na[i][j];
+=======
+=======
+>>>>>>> parent of 664d09e... version 1.01
+	for(int i=0; i<2; i++)for(int j=0; j<16; j++){
+		board[na[i][j].posx+13*na[i][j].posy]=&na[i][j];
+>>>>>>> parent of 664d09e... version 1.01
 	}
 }
 
@@ -387,6 +634,7 @@ pair<int, Moves> Search(State s, Moves* m, char side, int depth, int alpha, int 
 	list<Moves> L;
 	s.calcMoves(L, side);
 	Moves maxmove;
+<<<<<<< HEAD
 	//for(int i=0; i<16; i++){
 		//int k=s.na[side][i].kind;
 		for(auto nowm=L.begin(); nowm!=L.end(); nowm++){
@@ -404,6 +652,28 @@ pair<int, Moves> Search(State s, Moves* m, char side, int depth, int alpha, int 
 				if(beta<=nowscore)return make_pair(nowscore, *nowm);
 				maxmove=*nowm, alpha=nowscore;
 			}
+=======
+	int maxscore=~1<<30;
+	for(int i=0; i<16; i++){
+		int k=s.na[side][i].kind;
+		if(!k)continue;
+		for(auto nowm:s.na[side][i].Mov){
+			int nowscore;
+			if(k&8)nowscore=-Search(s, &nowm, !side, depth-1).first;
+			else{
+				nowscore=0;
+				for(int i=1; i<8; i++)if(s.hid[side][i]){
+					nowm.newchess=(side<<4)|8|i;
+					nowscore-=s.hid[side][i]*Search(s, &nowm, !side, depth-1).first;
+				}
+				nowscore/=s.tothid[side];
+			}
+			// ("%d (%d,%d)->(%d,%d)\n", nowscore, nowm.startx, nowm.starty, nowm.endx, nowm.endy);
+			if(maxscore<nowscore)maxscore=nowscore, maxmove=nowm;
+<<<<<<< HEAD
+>>>>>>> parent of 664d09e... version 1.01
+=======
+>>>>>>> parent of 664d09e... version 1.01
 		}
 	//}
 	return make_pair(alpha,maxmove);
