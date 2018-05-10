@@ -3,4 +3,5 @@ show
 move 7 2 7 9 2
 move 8 9 7 9 6
 show
-debug mana
+compute red
+debug dfs
