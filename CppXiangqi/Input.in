@@ -2,6 +2,7 @@ start
 show
 move 7 2 7 9 2
 move 8 9 7 9 6
+move 2 3 2 4 0
+move 6 6 6 5 0
 show
 compute red
-debug dfs

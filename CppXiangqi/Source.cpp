@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <Windows.h>
+#include <time.h>
 #include <iostream>
+#include <sstream>
 #include <algorithm>
+#include <string>
 #include <vector>
 #include <set>
-#include <string>
 
 using namespace std;
 
@@ -156,15 +158,15 @@ struct State{
 			}
 			else ch.addmove(x);
 			for(char y=ch.y()-1; y>=0; y--)if(has(ch.x(),y)){
-				if(get(ch.x(),y).isred()^side)ch.addmove(y+16);
+				if(get(ch.x(),y).isred()^side)ch.addmove(y+10);
 				break;
 			}
-			else ch.addmove(y+16);
+			else ch.addmove(y+10);
 			for(char y=ch.y()+1; y<=9; y++)if(has(ch.x(),y)){
-				if(get(ch.x(),y).isred()^side)ch.addmove(y+16);
+				if(get(ch.x(),y).isred()^side)ch.addmove(y+10);
 				break;
 			}
-			else ch.addmove(y+16);
+			else ch.addmove(y+10);
 		}break;
 		case 2:													// 马
 		{
@@ -204,15 +206,79 @@ struct State{
 		}break;
 		case 3:													// 炮
 		{
-
+			char x=ch.x(), y=ch.y();
+			for(char x=ch.x()-1; x>=0; x--)if(has(x, y)){
+				for(char x2=x-1; x2>=0; x2--)if(has(x2, y)){
+					if(get(x2, y).isred()^side)ch.addmove(x2);
+					break;
+				}
+				break;
+			}
+			else ch.addmove(x);
+			for(char x=ch.x()+1; x<=8; x++)if(has(x, y)){
+				for(char x2=x+1; x2<=8; x2++)if(has(x2, y)){
+					if(get(x2, y).isred()^side)ch.addmove(x2);
+					break;
+				}
+				break;
+			}
+			else ch.addmove(x);
+			for(char y=ch.y()-1; y>=0; y--)if(has(x, y)){
+				for(char y2=y-1; y2>=0; y2--)if(has(x, y2)){
+					if(get(x, y2).isred()^side)ch.addmove(y2+10);
+					break;
+				}
+				break;
+			}
+			else ch.addmove(y+10);
+			for(char y=ch.y()+1; y<=9; y++)if(has(x, y)){
+				for(char y2=y+1; y2<=9; y2++)if(has(x, y2)){
+					if(get(x, y2).isred()^side)ch.addmove(y2+10);
+					break;
+				}
+				break;
+			}
+			else ch.addmove(y+10);
 		}break;
 		case 4:													// 士
 		{
-
+			char x=ch.x(), y=ch.y();
+			if(y!=0){
+				if(x!=0 && (!has(x-1, y-1) || (get(x-1, y-1).isred()^side))){
+					ch.addmove(0);
+				}
+				if(x!=8 && (!has(x+1, y-1) || (get(x+1, y-1).isred()^side))){
+					ch.addmove(1);
+				}
+			}
+			if(y!=9){
+				if(x!=0 && (!has(x-1, y+1) || (get(x-1, y+1).isred()^side))){
+					ch.addmove(2);
+				}
+				if(x!=8 && (!has(x+1, y+1) || (get(x+1, y+1).isred()^side))){
+					ch.addmove(3);
+				}
+			}
 		}break;
 		case 5:													// 相
 		{
-
+			char x=ch.x(), y=ch.y();
+			if(y>1){
+				if(x>1 && !has(x-1, y-1) && (!has(x-2, y-2) || (get(x-2, y-2).isred()^side))){
+					ch.addmove(0);
+				}
+				if(x<8 && !has(x+1, y-1) && (!has(x+2, y-2) || (get(x+2, y-2).isred()^side))){
+					ch.addmove(1);
+				}
+			}
+			if(y<8){
+				if(x>1 && !has(x-1, y+1) && (!has(x-2, y+2) || (get(x-2, y+2).isred()^side))){
+					ch.addmove(2);
+				}
+				if(x<8 && !has(x+1, y+1) && (!has(x+2, y+2) || (get(x+2, y+2).isred()^side))){
+					ch.addmove(3);
+				}
+			}
 		}break;
 		case 6:													// 兵
 		{
@@ -255,7 +321,7 @@ struct State{
 	void perfMove(int side, vector<Node*>& v);
 
 	char getRandomHidden(char side){
-		// assert(tothid[side]==0);
+		// assert(tothid[side]!=0);
 		int temp=rand()%tothid[side];
 		for(char t=1;; t++)if((temp-=hid[side][t])<0)
 			return t;											
@@ -274,6 +340,12 @@ struct Node{
 }__;
 
 State& _=__.s;
+
+string showMove(Node& n){
+	stringstream s;
+	s<<"("<<(int)n.sx<<","<<(int)n.sy<<")->("<<(int)n.ex<<","<<(int)n.ey<<") ";
+	return s.str();
+}
 
 void showState(State s){
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xF0);
@@ -305,9 +377,9 @@ void State::perfMove(int side, vector<Node*>& v){
 	for(int i=0; i<16; i++)if(!ch[side][i].eaten()){
 		Mana& m=ch[side][i];
 		switch(m.shape()){
-		case 1:{
+		case 1:case 3:{
 			for(char x=0; x<9; x++)if(m.moves&(1<<x))doIt(m.x(), m.y(), x, m.y(), v);
-			for(char y=0; y<10; y++)if(m.moves&(1<<y+16))doIt(m.x(), m.y(), m.x(), y, v);
+			for(char y=0; y<10; y++)if(m.moves&(1<<y+10))doIt(m.x(), m.y(), m.x(), y, v);
 		}break;
 		case 2:{
 			if(m.moves&1)doIt(m.x(), m.y(), m.x()+1, m.y()+2, v);
@@ -319,60 +391,85 @@ void State::perfMove(int side, vector<Node*>& v){
 			if(m.moves&64)doIt(m.x(), m.y(), m.x()+1, m.y()-2, v);
 			if(m.moves&128)doIt(m.x(), m.y(), m.x()+2, m.y()-1, v);
 		}break;
-		default:assert(true);
+		case 4:{
+			if(m.moves&1)doIt(m.x(), m.y(), m.x()-1, m.y()-1, v);
+			if(m.moves&2)doIt(m.x(), m.y(), m.x()+1, m.y()-1, v);
+			if(m.moves&4)doIt(m.x(), m.y(), m.x()-1, m.y()+1, v);
+			if(m.moves&8)doIt(m.x(), m.y(), m.x()+1, m.y()+1, v);
+		}break;
+		case 5:{
+			if(m.moves&1)doIt(m.x(), m.y(), m.x()-2, m.y()-2, v);
+			if(m.moves&2)doIt(m.x(), m.y(), m.x()+2, m.y()-2, v);
+			if(m.moves&4)doIt(m.x(), m.y(), m.x()-2, m.y()+2, v);
+			if(m.moves&8)doIt(m.x(), m.y(), m.x()+2, m.y()+2, v);
+		}break;
+		default:;
 		}
 	}
 }
 
 void wide_dfs(Node& root, bool side, int depth){
 	void showState(State s);
-	printf("Deep = %d.\n", depth);
-	showState(root.s);
 	if(depth==0){
 		root.s.score=root.s.getScore(side)-root.s.getScore(!side);	// 计算当前场面得分
-		printf("Score = %d.\n", root.s.score);
+		//printf("Score = %d.\n", root.s.score);
 		return;
 	}
 	auto& Vec = root.v;
 	root.s.perfMove(side, Vec);
+	root.s.score=-0x3f3f3f3f;
 	for(auto n:Vec){
 		if(!n->s.get(n->ex,n->ey).shown()){
-			State temp = n->s;
+			//State temp = n->s;
 			int totscore = 0;
 			for(int i=1; i<8; i++)if(n->s.hid[side][i]){
-				temp.flushOut(n->ex, n->ey, i);
-				temp.calcMove(temp.get(n->ex, n->ey));
-				Node* add = new Node{temp,n->sx,n->sy,n->ex,n->ey};
+				Node* add = new Node{n->s,n->sx,n->sy,n->ex,n->ey};
+				add->s.flushOut(n->ex, n->ey, i);
+				add->s.calcMove(n->s.get(n->ex, n->ey));
 				n->v.push_back(add);
 				wide_dfs(*add, !side, depth-1);
 				totscore+=add->s.score*n->s.hid[side][i];
 			}
 			n->s.score=totscore/n->s.tothid[side];
+			n->to=(Node*)-1;
 		}
 		else{
 			wide_dfs(*n, !side, depth-1);
-			if(root.s.score+n->s.score<0){
-				root.s.score=-n->s.score;
-				root.to=n;
-			}
+		}
+		if(root.s.score+n->s.score<0){
+			root.s.score=-n->s.score;
+			root.to=n;
 		}
 	}
 }
 
-void show_dfs(Node& root, int showd, int depth){
-	if(showd<depth){
+void show_dfs(Node& root, int showd, int depth=0, string s=""){
+	if(depth<showd){
 
+	}
+	else{
+		Node* a=&root;
+		for(; a->v.size(); a=a->to){
+			if(!~(int)a->to){
+			//if(!a->s.get(a->ex,a->ey).shown()){
+				for(auto b:a->v){
+					show_dfs(*b, 0, 0, s+showMove(*b)+"暗"+__CHESSNAM[a->s.get(a->ex, a->ey).isred()][a->s.get(a->ex, a->ey).shape()]+"->"+__CHESSNAM[b->s.get(b->ex, b->ey).isred()][b->s.get(b->ex, b->ey).shape()]+"  ");
+				}
+				return;
+			}
+			else if(a->sx||a->sy||a->ex||a->ey)
+				s+=showMove(*a)+__CHESSNAM[a->s.get(a->ex, a->ey).isred()][a->s.get(a->ex, a->ey).shape()]+"  ";
+		}
+		cout<<s<<"得分："<<a->s.score<<endl;
 	}
 }
 
-void debug_dfs(Node& root,int depth=0){
-	printf("第 %d 层，当前步(%d,%d)->(%d,%d)，场面分 %d。\n", depth, root.sx, root.sy, root.ex, root.ey, root.s.score);
-	//showState(root.s);
-	for(auto n:root.v) debug_dfs(*n, depth+1);
+void show_result(Node& root){
+	printf("(%d,%d)->(%d,%d) %d\n", root.to->sx, root.to->sy, root.to->ex, root.to->ey, root.to->s.score);
 }
 
 int main(){
-	freopen("Input.in", "r", stdin);
+	//freopen("Input.in", "r", stdin);
 	string command;
 	while(cin>>command){
 		if(command=="start"){
@@ -394,8 +491,11 @@ int main(){
 		else if(command=="compute"){
 			cin>>command;
 			if(command=="red"){
-				wide_dfs(__, 0, 1);
+				time_t i=clock();
+				wide_dfs(__, 0, 2);
+				printf("%d\n", (int)(clock()-i));
 			}
+			show_result(__);
 		}
 		else if(command=="debug"){
 			cin>>command;
@@ -417,7 +517,7 @@ int main(){
 				}
 			}
 			else if(command=="dfs"){
-				debug_dfs(__);
+				//debug_dfs(__);
 			}
 		}
 	}
