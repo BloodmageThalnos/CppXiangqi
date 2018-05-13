@@ -6,3 +6,4 @@ move 2 3 2 4 0
 move 6 6 6 5 0
 show
 compute red
+compute black

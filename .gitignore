@@ -1,7 +1,12 @@
 /CppXiangqi/Debug/*
+/CppXiangqi/Release/*
 /CppXiangqi/CppXiangqi/Debug/*
+/CppXiangqi/CppXiangqi/Release/*
 /CppXiangqi/x64/Debug/*
+/CppXiangqi/x64/Release/*
 /CppXiangqi/CppXiangqi/x64/Debug/*
+/CppXiangqi/CppXiangqi/x64/Release/*
 /CppXiangqi/.vs/*
 /Debug/*
+/Release/*
 /.vs/*

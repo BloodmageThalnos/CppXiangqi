@@ -32,7 +32,7 @@ struct Mana{
 	char px, py;												// 位置
 	char kind;													// [0暗1明][001-111车马炮士相兵帅]
 	char flag;													// [0黑1红][1被吃]
-	int moves;													// 用一个int来压缩保存当前棋子可行的所有移动
+	int moves;													// 用一个int来压缩保存当前棋子可行移动
 
 	char x(){ return px; }
 	char y(){ return py; }
@@ -54,7 +54,7 @@ struct State{
 	Mana ch[2][16];												// 32颗棋子
 	char hid[2][8];												// 每方剩余暗子数量
 	char tothid[2];												// 每方暗子总量
-	int score;													// 分数
+	//int score;												// 分数
 
 	// 获取(x,y)位置上的棋子
 	Mana& get(char x, char y){
@@ -68,38 +68,38 @@ struct State{
 
 	// 将棋盘变成开局时的模样
 	void init(){
-		ch[0][0]=Mana{0,0,1,2};
-		ch[0][1]=Mana{8,0,1,2};
-		ch[0][2]=Mana{1,0,2,2};
-		ch[0][3]=Mana{7,0,2,2};
-		ch[0][4]=Mana{2,0,5,2};
-		ch[0][5]=Mana{6,0,5,2};
-		ch[0][6]=Mana{3,0,4,2};
-		ch[0][7]=Mana{5,0,4,2};
-		ch[0][8]=Mana{4,0,15,2};
-		ch[0][9]=Mana{1,2,3,2};
-		ch[0][10]=Mana{7,2,3,2};
-		ch[0][11]=Mana{0,3,6,2};
-		ch[0][12]=Mana{2,3,6,2};
-		ch[0][13]=Mana{4,3,6,2};
-		ch[0][14]=Mana{6,3,6,2};
-		ch[0][15]=Mana{8,3,6,2};
-		ch[1][0]=Mana{0,9,1,0};
-		ch[1][1]=Mana{8,9,1,0};
-		ch[1][2]=Mana{1,9,2,0};
-		ch[1][3]=Mana{7,9,2,0};
-		ch[1][4]=Mana{2,9,5,0};
-		ch[1][5]=Mana{6,9,5,0};
-		ch[1][6]=Mana{3,9,4,0};
-		ch[1][7]=Mana{5,9,4,0};
-		ch[1][8]=Mana{4,9,15,0};
-		ch[1][9]=Mana{1,7,3,0};
-		ch[1][10]=Mana{7,7,3,0};
-		ch[1][11]=Mana{0,6,6,0};
-		ch[1][12]=Mana{2,6,6,0};
-		ch[1][13]=Mana{4,6,6,0};
-		ch[1][14]=Mana{6,6,6,0};
-		ch[1][15]=Mana{8,6,6,0};
+		ch[1][0]=Mana{0,0,1,2};
+		ch[1][1]=Mana{8,0,1,2};
+		ch[1][2]=Mana{1,0,2,2};
+		ch[1][3]=Mana{7,0,2,2};
+		ch[1][4]=Mana{2,0,5,2};
+		ch[1][5]=Mana{6,0,5,2};
+		ch[1][6]=Mana{3,0,4,2};
+		ch[1][7]=Mana{5,0,4,2};
+		ch[1][8]=Mana{4,0,15,2};
+		ch[1][9]=Mana{1,2,3,2};
+		ch[1][10]=Mana{7,2,3,2};
+		ch[1][11]=Mana{0,3,6,2};
+		ch[1][12]=Mana{2,3,6,2};
+		ch[1][13]=Mana{4,3,6,2};
+		ch[1][14]=Mana{6,3,6,2};
+		ch[1][15]=Mana{8,3,6,2};
+		ch[0][0]=Mana{0,9,1,0};
+		ch[0][1]=Mana{8,9,1,0};
+		ch[0][2]=Mana{1,9,2,0};
+		ch[0][3]=Mana{7,9,2,0};
+		ch[0][4]=Mana{2,9,5,0};
+		ch[0][5]=Mana{6,9,5,0};
+		ch[0][6]=Mana{3,9,4,0};
+		ch[0][7]=Mana{5,9,4,0};
+		ch[0][8]=Mana{4,9,15,0};
+		ch[0][9]=Mana{1,7,3,0};
+		ch[0][10]=Mana{7,7,3,0};
+		ch[0][11]=Mana{0,6,6,0};
+		ch[0][12]=Mana{2,6,6,0};
+		ch[0][13]=Mana{4,6,6,0};
+		ch[0][14]=Mana{6,6,6,0};
+		ch[0][15]=Mana{8,6,6,0};
 		for(int i=0; i<90; i++)									// 场面清空
 			bd[0][i]=-1;
 		for(int i=0; i<32; i++)									// 摆上棋子
@@ -129,10 +129,18 @@ struct State{
 		// 更新场面相关信息
 	}
 
-	void flushOut(char sx, char sy, char newchess){
-		get(sx, sy).kind=newchess|8;
-		hid[get(sx, sy).isred()][get(sx, sy).shape()]--;
-		tothid[get(sx, sy).isred()]--;
+	// 翻开一颗子
+	void flushOut(char x, char y, char newchess){
+		Mana& m=get(x, y);
+		if(m.kind>8){
+			hid[m.isred()][m.shape()]++;
+			tothid[m.isred()]++;
+		}
+		m.kind=newchess|8;
+		assert(hid[m.isred()][newchess]>0);
+		assert(tothid[m.isred()]>0);
+		hid[m.isred()][newchess]--;
+		tothid[m.isred()]--;
 	}
 
 	// 更新当前棋子的合法移动
@@ -242,22 +250,29 @@ struct State{
 		}break;
 		case 4:													// 士
 		{
-			char x=ch.x(), y=ch.y();
-			if(y!=0){
-				if(x!=0 && (!has(x-1, y-1) || (get(x-1, y-1).isred()^side))){
-					ch.addmove(0);
+			if(ch.shown()){
+				char x=ch.x(), y=ch.y();
+				if(y!=0){
+					if(x!=0 && (!has(x-1, y-1) || (get(x-1, y-1).isred()^side))){
+						ch.addmove(0);
+					}
+					if(x!=8 && (!has(x+1, y-1) || (get(x+1, y-1).isred()^side))){
+						ch.addmove(1);
+					}
 				}
-				if(x!=8 && (!has(x+1, y-1) || (get(x+1, y-1).isred()^side))){
-					ch.addmove(1);
+				if(y!=9){
+					if(x!=0 && (!has(x-1, y+1) || (get(x-1, y+1).isred()^side))){
+						ch.addmove(2);
+					}
+					if(x!=8 && (!has(x+1, y+1) || (get(x+1, y+1).isred()^side))){
+						ch.addmove(3);
+					}
 				}
 			}
-			if(y!=9){
-				if(x!=0 && (!has(x-1, y+1) || (get(x-1, y+1).isred()^side))){
-					ch.addmove(2);
-				}
-				if(x!=8 && (!has(x+1, y+1) || (get(x+1, y+1).isred()^side))){
-					ch.addmove(3);
-				}
+			else{
+				char x=ch.isred()?1:8, y=4;
+				if(!has(x, y) || (get(x, y).isred()^side))
+					ch.addmove(side+(ch.x()==5)*2);
 			}
 		}break;
 		case 5:													// 相
@@ -282,11 +297,41 @@ struct State{
 		}break;
 		case 6:													// 兵
 		{
-
+			char x=ch.x(), y=ch.y();
+			if(side?y>=5:y<=4){
+				if(x && (!has(x-1, y) || (get(x-1, y).isred()^side))){
+					ch.addmove(2);
+				}
+				if(x!=8 && (!has(x+1, y) || (get(x+1, y).isred()^side))){
+					ch.addmove(3);
+				}
+			}
+			if(side){
+				if(y!=9 && (!has(x, y+1) || (get(x, y+1).isred()^side))){
+					ch.addmove(1);
+				}
+			}
+			else{
+				if(y && (!has(x, y-1) || (get(x, y-1).isred()^side))){
+					ch.addmove(0);
+				}
+			}
 		}break;
-		case 7:													// 帅
+		case 7:													// 将帅
 		{
-
+			char x=ch.x(), y=ch.y();
+			if((side?y:y!=7) && (!has(x, y-1) || (get(x, y-1).isred()^side))){
+				ch.addmove(0);
+			}
+			if((side?y!=2:y!=9) && (!has(x, y+1) || (get(x, y+1).isred()^side))){
+				ch.addmove(1);
+			}
+			if(x!=3 && (!has(x-1, y) || (get(x-1, y).isred()^side))){
+				ch.addmove(2);
+			}
+			if(x!=5 && (!has(x+1, y) || (get(x+1, y).isred()^side))){
+				ch.addmove(3);
+			}
 		}break;
 		}
 	}
@@ -294,7 +339,7 @@ struct State{
 	// 计算当前场面的评价得分
 	int getScore(bool side){
 		// 只算一边
-		const static int sc[]={0,100,60,60,50,30,20,50000};
+		const static int sc[]={0,120,60,60,50,30,20,50000};
 		const static int pw[]={0,6,4,5,4,3,4,2};
 		int ret=0;
 		
@@ -309,16 +354,17 @@ struct State{
 				else ret-=mid;			// 如果吃的是暗子，就减去平均子力
 			}
 			else{
+				ret+=sc[m.shape()];		// 由于明暗有别，追加上该子的子力
 				ret+=__COUNT_B1(m.moves)*pw[m.shape()];
-										// 否则计算该子对棋盘的控制能力。
+										// 该子对棋盘的控制能力。
 			}
 		}
 		return ret;
 	}
 
-	void doIt(char sx, char sy, char ex, char ey, vector<Node*>& v);
+	void doIt(char sx, char sy, char ex, char ey, vector<Node>& v);
 
-	void perfMove(int side, vector<Node*>& v);
+	void perfMove(int side, vector<Node>& v);
 
 	char getRandomHidden(char side){
 		// assert(tothid[side]!=0);
@@ -330,16 +376,20 @@ struct State{
 
 struct Node{
 	// Node 表示搜索时的一个节点，构成一棵搜索树。
-	State s;								// 该节点对应的场面
+	//State s;								// 该节点对应的场面。太占内存删除之。
 	char sx, sy, ex, ey;					// 记录此节点的上一步。我觉得记录在state中更好。
-	vector<Node*> v;						// 孩子们
-	Node* to;								// 大儿子
+	//vector<Node*> v;						// 孩子们
+	//Node* to;								// 大儿子
+	int score;								// 此节点的评分
 	bool operator< (const Node& b) const{	// 用于sort
-		return s.score<b.s.score;
+		return score<b.score;
+	}
+	void show(){
+		printf("(%d,%d)->(%d,%d) %d\n", sx, sy, ex, ey, score);
 	}
 }__;
 
-State& _=__.s;
+State _;
 
 string showMove(Node& n){
 	stringstream s;
@@ -367,16 +417,20 @@ void showState(State s){
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
 }
 
-void State::doIt(char sx, char sy, char ex, char ey, vector<Node*>& v){
-	Node* temp = new Node{*this,sx,sy,ex,ey};
-	temp->s.move(sx, sy, ex, ey);
-	v.push_back(temp);
+void State::doIt(char sx, char sy, char ex, char ey, vector<Node>& v){
+	v.push_back(Node{sx,sy,ex,ey});
 }
 
-void State::perfMove(int side, vector<Node*>& v){
+void State::perfMove(int side, vector<Node>& v){
 	for(int i=0; i<16; i++)if(!ch[side][i].eaten()){
 		Mana& m=ch[side][i];
 		switch(m.shape()){
+		case 6:case 7:{
+			if(m.moves&1)doIt(m.x(), m.y(), m.x(), m.y()-1, v);
+			if(m.moves&2)doIt(m.x(), m.y(), m.x(), m.y()+1, v);
+			if(m.moves&4)doIt(m.x(), m.y(), m.x()-1, m.y(), v);
+			if(m.moves&8)doIt(m.x(), m.y(), m.x()+1, m.y(), v);
+		}break;
 		case 1:case 3:{
 			for(char x=0; x<9; x++)if(m.moves&(1<<x))doIt(m.x(), m.y(), x, m.y(), v);
 			for(char y=0; y<10; y++)if(m.moves&(1<<y+10))doIt(m.x(), m.y(), m.x(), y, v);
@@ -408,64 +462,39 @@ void State::perfMove(int side, vector<Node*>& v){
 	}
 }
 
-void wide_dfs(Node& root, bool side, int depth){
-	void showState(State s);
+void wide_dfs(Node& root, State& s, bool side, int depth){
 	if(depth==0){
-		root.s.score=root.s.getScore(side)-root.s.getScore(!side);	// 计算当前场面得分
+		//showState(s);
+		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
 		//printf("Score = %d.\n", root.s.score);
 		return;
 	}
-	auto& Vec = root.v;
-	root.s.perfMove(side, Vec);
-	root.s.score=-0x3f3f3f3f;
+	vector<Node> Vec;
+	s.perfMove(side, Vec);
+	root.score=-0xfffff;
 	for(auto n:Vec){
-		if(!n->s.get(n->ex,n->ey).shown()){
-			//State temp = n->s;
+		State temp=s;
+		temp.move(n.sx, n.sy, n.ex, n.ey);
+		if(!temp.get(n.ex, n.ey).shown()){
 			int totscore = 0;
-			for(int i=1; i<8; i++)if(n->s.hid[side][i]){
-				Node* add = new Node{n->s,n->sx,n->sy,n->ex,n->ey};
-				add->s.flushOut(n->ex, n->ey, i);
-				add->s.calcMove(n->s.get(n->ex, n->ey));
-				n->v.push_back(add);
-				wide_dfs(*add, !side, depth-1);
-				totscore+=add->s.score*n->s.hid[side][i];
+			for(int i=1; i<7; i++)if(s.hid[side][i]){
+				temp.flushOut(n.ex, n.ey, i);
+				temp.calcMove(temp.get(n.ex, n.ey));
+				wide_dfs(n, temp, !side, depth-1);
+				totscore+=n.score*s.hid[side][i];
 			}
-			n->s.score=totscore/n->s.tothid[side];
-			n->to=(Node*)-1;
+			n.score=totscore/s.tothid[side];
 		}
 		else{
-			wide_dfs(*n, !side, depth-1);
+			wide_dfs(n, temp, !side, depth-1);
 		}
-		if(root.s.score+n->s.score<0){
-			root.s.score=-n->s.score;
-			root.to=n;
+		if(root.score+n.score<0){
+			root.score=-n.score;
 		}
-	}
-}
-
-void show_dfs(Node& root, int showd, int depth=0, string s=""){
-	if(depth<showd){
-
-	}
-	else{
-		Node* a=&root;
-		for(; a->v.size(); a=a->to){
-			if(!~(int)a->to){
-			//if(!a->s.get(a->ex,a->ey).shown()){
-				for(auto b:a->v){
-					show_dfs(*b, 0, 0, s+showMove(*b)+"暗"+__CHESSNAM[a->s.get(a->ex, a->ey).isred()][a->s.get(a->ex, a->ey).shape()]+"->"+__CHESSNAM[b->s.get(b->ex, b->ey).isred()][b->s.get(b->ex, b->ey).shape()]+"  ");
-				}
-				return;
-			}
-			else if(a->sx||a->sy||a->ex||a->ey)
-				s+=showMove(*a)+__CHESSNAM[a->s.get(a->ex, a->ey).isred()][a->s.get(a->ex, a->ey).shape()]+"  ";
-		}
-		cout<<s<<"得分："<<a->s.score<<endl;
 	}
 }
 
 void show_result(Node& root){
-	printf("(%d,%d)->(%d,%d) %d\n", root.to->sx, root.to->sy, root.to->ex, root.to->ey, root.to->s.score);
 }
 
 int main(){
@@ -489,12 +518,14 @@ int main(){
 			}
 		}
 		else if(command=="compute"){
+			int side;
 			cin>>command;
-			if(command=="red"){
-				time_t i=clock();
-				wide_dfs(__, 0, 2);
-				printf("%d\n", (int)(clock()-i));
-			}
+			if(command=="red") side=1;
+			else if(command=="black") side=0;
+
+			time_t i=clock();
+			wide_dfs(__, _, side, 3);
+			printf("cost %d ms\n", (int)(clock()-i));
 			show_result(__);
 		}
 		else if(command=="debug"){
@@ -522,3 +553,6 @@ int main(){
 		}
 	}
 }
+
+
+// 将帅不能照面还没做
