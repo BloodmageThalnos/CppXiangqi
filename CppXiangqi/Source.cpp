@@ -62,7 +62,7 @@ struct State{
 	}
 
 	// 检查(x,y)位置是否有棋子，等价于get(x,y).shape()，效率较高
-	bool has(char x, char y){
+	bool has(char x, char y) const{
 		return ~bd[x][y];
 	}
 
@@ -337,9 +337,9 @@ struct State{
 	}
 
 	// 计算当前场面的评价得分
-	int getScore(bool side){
+	int getScore(bool side) const{
 		// 只算一边
-		const static int sc[]={0,120,60,60,50,30,20,50000};
+		const static int sc[]={0,120,60,600,50,30,20,50000};
 		const static int pw[]={0,6,4,5,4,3,4,2};
 		int ret=0;
 		
@@ -381,13 +381,25 @@ struct Node{
 	//vector<Node*> v;						// 孩子们
 	//Node* to;								// 大儿子
 	int score;								// 此节点的评分
-	bool operator< (const Node& b) const{	// 用于sort
-		return score<b.score;
-	}
-	void show(){
+	bool operator<(const Node& b) const;
+	void show() const{
 		printf("(%d,%d)->(%d,%d) %d\n", sx, sy, ex, ey, score);
 	}
+	short hash() const{
+		return sx+sy*9+ex*90+ey*810;
+	}
 }__;
+
+int MAGIC_SCORE[8100];
+
+bool Node::operator< (const Node& b) const{	// 用于sort
+	return MAGIC_SCORE[hash()]>MAGIC_SCORE[b.hash()];	
+											// 注意符号，倒序排序
+}
+
+void updateMagic(const Node& b){
+	MAGIC_SCORE[b.hash()]=MAGIC_SCORE[b.hash()]*0.7 + b.score;
+}
 
 State _;
 
@@ -462,14 +474,15 @@ void State::perfMove(int side, vector<Node>& v){
 	}
 }
 
-void wide_dfs(Node& root, State& s, bool side, int depth){
+void old_wide_dfs(Node& root, State& s, bool side, int depth){
 	if(depth==0){
 		//showState(s);
 		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
-		//printf("Score = %d.\n", root.s.score);
+														//printf("Score = %d.\n", root.s.score);
 		return;
 	}
 	vector<Node> Vec;
+	Node* b;
 	s.perfMove(side, Vec);
 	root.score=-0xfffff;
 	for(auto n:Vec){
@@ -480,18 +493,97 @@ void wide_dfs(Node& root, State& s, bool side, int depth){
 			for(int i=1; i<7; i++)if(s.hid[side][i]){
 				temp.flushOut(n.ex, n.ey, i);
 				temp.calcMove(temp.get(n.ex, n.ey));
-				wide_dfs(n, temp, !side, depth-1);
+				old_wide_dfs(n, temp, !side, depth-1);
 				totscore+=n.score*s.hid[side][i];
 			}
 			n.score=totscore/s.tothid[side];
 		}
 		else{
-			wide_dfs(n, temp, !side, depth-1);
+			old_wide_dfs(n, temp, !side, depth-1);
 		}
 		if(root.score+n.score<0){
 			root.score=-n.score;
+			b=&n;
 		}
 	}
+	if(depth>=3)b->show();
+}
+
+void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
+	if(depth==0){
+		//showState(s);
+		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
+		//printf("Score = %d.\n", root.score);
+		return;
+	}
+
+	vector<Node> Vec;
+	s.perfMove(side, Vec);
+	sort(Vec.begin(), Vec.end());
+	Node* b=&Vec[], &best=*b;							// 找到最好的那一步
+
+	State temp=s;
+	temp.move(best.sx, best.sy, best.ex, best.ey);
+	if(!temp.get(best.ex, best.ey).shown()){
+		int totscore = 0;
+		for(int i=1; i<7; i++)if(s.hid[side][i]){
+			temp.flushOut(best.ex, best.ey, i);
+			temp.calcMove(temp.get(best.ex, best.ey));
+			wide_dfs(best, temp, !side, depth-1, -beta, -alpha);
+			totscore+=best.score*s.hid[side][i];
+		}
+		best.score=totscore/s.tothid[side];
+	}
+	else{
+		wide_dfs(best, temp, !side, depth-1, -beta, -alpha);
+	}
+	root.score=-best.score;
+
+	for(auto& n:Vec)if((&n)!=(&best)){					// 对于其他步骤
+		State temp=s;
+		temp.move(n.sx, n.sy, n.ex, n.ey);
+		if(!temp.get(n.ex, n.ey).shown()){
+			int totscore = 0;
+			for(int i=1; i<7; i++)if(s.hid[side][i]){
+				temp.flushOut(n.ex, n.ey, i);
+				temp.calcMove(temp.get(n.ex, n.ey));
+				wide_dfs(n, temp, !side, depth-1, -alpha-1, -alpha);
+				totscore+=n.score*s.hid[side][i];
+			}
+			n.score=totscore/s.tothid[side];
+		}
+		else{
+			wide_dfs(n, temp, !side, depth-1, -alpha-1, -alpha);
+		}
+
+		int now=-n.score;
+		if(now>alpha && now<beta){
+			if(!temp.get(n.ex, n.ey).shown()){
+				int totscore = 0;
+				for(int i=1; i<7; i++)if(s.hid[side][i]){
+					temp.flushOut(n.ex, n.ey, i);
+					temp.calcMove(temp.get(n.ex, n.ey));
+					wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
+					totscore+=n.score*s.hid[side][i];
+				}
+				n.score=totscore/s.tothid[side];
+			}
+			else{
+				wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
+			}
+			now=-n.score;
+		}
+
+		if(now>=root.score){
+			root.score=now;
+			b=&n;
+			if(now>=alpha){
+				alpha=now;
+				if(now>=beta)break;
+			}
+		}
+	}
+	if(depth>=3)b->show();
 }
 
 void show_result(Node& root){
@@ -524,7 +616,10 @@ int main(){
 			else if(command=="black") side=0;
 
 			time_t i=clock();
-			wide_dfs(__, _, side, 3);
+			wide_dfs(__, _, side, 4, -100000, 100000);
+			printf("cost %d ms\n", (int)(clock()-i));
+			i=clock();
+			//old_wide_dfs(__, _, side, 3);
 			printf("cost %d ms\n", (int)(clock()-i));
 			show_result(__);
 		}
