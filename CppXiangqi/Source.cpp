@@ -339,7 +339,7 @@ struct State{
 	// 计算当前场面的评价得分
 	int getScore(bool side) const{
 		// 只算一边
-		const static int sc[]={0,120,60,600,50,30,20,50000};
+		const static int sc[]={0,120,60,60,50,30,20,50000};
 		const static int pw[]={0,6,4,5,4,3,4,2};
 		int ret=0;
 		
@@ -391,6 +391,7 @@ struct Node{
 }__;
 
 int MAGIC_SCORE[8100];
+const int inf=100000;
 
 bool Node::operator< (const Node& b) const{	// 用于sort
 	return MAGIC_SCORE[hash()]>MAGIC_SCORE[b.hash()];	
@@ -478,14 +479,14 @@ void old_wide_dfs(Node& root, State& s, bool side, int depth){
 	if(depth==0){
 		//showState(s);
 		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
-														//printf("Score = %d.\n", root.s.score);
+		//printf("Score = %d.\n", root.s.score);
 		return;
 	}
 	vector<Node> Vec;
 	Node* b;
 	s.perfMove(side, Vec);
 	root.score=-0xfffff;
-	for(auto n:Vec){
+	for(auto& n:Vec){
 		State temp=s;
 		temp.move(n.sx, n.sy, n.ex, n.ey);
 		if(!temp.get(n.ex, n.ey).shown()){
@@ -519,8 +520,8 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 
 	vector<Node> Vec;
 	s.perfMove(side, Vec);
-	sort(Vec.begin(), Vec.end());
-	Node* b=&Vec[], &best=*b;							// 找到最好的那一步
+	//sort(Vec.begin(), Vec.end());
+	Node* b=&Vec[0], &best=*b;							// 找到最好的那一步
 
 	State temp=s;
 	temp.move(best.sx, best.sy, best.ex, best.ey);
@@ -529,7 +530,7 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 		for(int i=1; i<7; i++)if(s.hid[side][i]){
 			temp.flushOut(best.ex, best.ey, i);
 			temp.calcMove(temp.get(best.ex, best.ey));
-			wide_dfs(best, temp, !side, depth-1, -beta, -alpha);
+			wide_dfs(best, temp, !side, depth-1, -inf, inf);
 			totscore+=best.score*s.hid[side][i];
 		}
 		best.score=totscore/s.tothid[side];
@@ -547,23 +548,23 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 			for(int i=1; i<7; i++)if(s.hid[side][i]){
 				temp.flushOut(n.ex, n.ey, i);
 				temp.calcMove(temp.get(n.ex, n.ey));
-				wide_dfs(n, temp, !side, depth-1, -alpha-1, -alpha);
+				wide_dfs(n, temp, !side, depth-1, -inf, inf);
 				totscore+=n.score*s.hid[side][i];
 			}
 			n.score=totscore/s.tothid[side];
 		}
 		else{
-			wide_dfs(n, temp, !side, depth-1, -alpha-1, -alpha);
+			wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
 		}
 
 		int now=-n.score;
-		if(now>alpha && now<beta){
+		/*if(now>alpha && now<beta){
 			if(!temp.get(n.ex, n.ey).shown()){
 				int totscore = 0;
 				for(int i=1; i<7; i++)if(s.hid[side][i]){
 					temp.flushOut(n.ex, n.ey, i);
 					temp.calcMove(temp.get(n.ex, n.ey));
-					wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
+					wide_dfs(n, temp, !side, depth-1, -inf, inf);
 					totscore+=n.score*s.hid[side][i];
 				}
 				n.score=totscore/s.tothid[side];
@@ -572,12 +573,12 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 				wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
 			}
 			now=-n.score;
-		}
+		}*/
 
-		if(now>=root.score){
+		if(now>root.score){
 			root.score=now;
-			b=&n;
-			if(now>=alpha){
+			b=&n; 
+			if(now>alpha){
 				alpha=now;
 				if(now>=beta)break;
 			}
@@ -616,12 +617,12 @@ int main(){
 			else if(command=="black") side=0;
 
 			time_t i=clock();
-			wide_dfs(__, _, side, 4, -100000, 100000);
-			printf("cost %d ms\n", (int)(clock()-i));
-			i=clock();
-			//old_wide_dfs(__, _, side, 3);
+			old_wide_dfs(__, _, side, 3);
 			printf("cost %d ms\n", (int)(clock()-i));
 			show_result(__);
+			i=clock();
+			wide_dfs(__, _, side, 3, -inf, inf);
+			printf("cost %d ms\n", (int)(clock()-i));
 		}
 		else if(command=="debug"){
 			cin>>command;
