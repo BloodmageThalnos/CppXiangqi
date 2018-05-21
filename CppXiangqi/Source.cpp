@@ -24,8 +24,6 @@ inline int __COUNT_B1(int t){
 	return r;
 }
 
-char abs(char c){ return c>=0?c:-c; }
-
 struct Node;
 struct Mana;
 struct State;
@@ -36,12 +34,12 @@ struct Mana{
 	char flag;													// [0黑1红][1被吃]
 	int moves;													// 用一个int来压缩保存当前棋子可行移动
 
-	char x(){ return px; }
-	char y(){ return py; }
-	bool isred(){ return flag&2; }
-	char shape(){ return kind&7; }
-	bool shown(){ return kind&8; }
-	bool eaten(){ return flag&1; }
+	char x() const{ return px; }
+	char y() const{ return py; }
+	bool isred() const{ return flag&2; }
+	char shape() const{ return kind&7; }
+	bool shown() const{ return kind&8; }
+	bool eaten() const{ return flag&1; }
 	void eated(){
 		flag|=1;
 		moves=0;
@@ -58,7 +56,7 @@ struct Mana{
 	void setmove(char t, bool x){
 		moves = (moves | (1<<t)) ^ (!x<<t);
 	}
-	bool hasmove(char t){
+	bool hasmove(char t) const{
 		return moves&(1<<t);
 	}
 }noMana;
@@ -141,14 +139,7 @@ struct State{
 		bd[sx][sy]=-1;
 
 		for(int i=0; i<32; i++)if(!ch[0][i].eaten()){			// 更新棋子移动
-				if(&ch[0][i]==&get(ex, ey))
-					calcMove(ch[0][i]);
-				else{
-					(ch[0][i].isred()^get(ex, ey).isred()) ?
-						updateMove(sx, sy, ex, ey, ch[0][i]) :
-						updateMove2(sx, sy, ex, ey, ch[0][i]);
-					//calcMove(ch[0][i]);
-				}
+				calcMove(ch[0][i]);
 			}
 	}
 
@@ -167,9 +158,8 @@ struct State{
 	}
 
 	// 更新当前棋子的合法移动
-	void updateMove(const char sx, const char sy, const char ex, const char ey, Mana& ch){
+	void updateMove(const char sx, const char sy, const char ex, const char ey, Mana& ch, const bool test){
 		char x=ch.x(), y=ch.y();
-		const bool test=true;
 		bool side=ch.isred();
 		switch(ch.shape()){
 		case 6:													// 兵
@@ -177,7 +167,7 @@ struct State{
 			if(x==sx && y==(side?sy-1:sy+1)){
 				ch.addmove(side);
 			}
-			else if(x==ex && y==(side?ey-1:ey+1)){
+			if(x==ex && y==(side?ey-1:ey+1)){
 				ch.setmove(side, test);
 			}
 			if(side?y>=5:y<=4){
@@ -189,21 +179,6 @@ struct State{
 					if(x==ex+1)ch.setmove(2,test);
 					if(x==ex-1)ch.setmove(3,test);
 				}
-			}
-		}break;
-		case 7:													// 将帅
-		{
-			if(sx>=3 && sx<=5 && (side?sy<=2:sy>=7)){
-				if(sx==x && sy+1==y)ch.addmove(0);
-				else if(sx==x && sy-1==y)ch.addmove(1);
-				else if(sx+1==x && sy==y)ch.addmove(2);
-				else if(sx-1==x && sy==y)ch.addmove(3);
-			}
-			if(ex>=3 && ex<=5 && (side?ey<=2:ey>=7)){
-				if(ex==x && ey+1==y)ch.setmove(0, test);
-				else if(ex==x && ey-1==y)ch.setmove(1, test);
-				else if(ex+1==x && ey==y)ch.setmove(2, test);
-				else if(ex-1==x && ey==y)ch.setmove(3, test);
 			}
 		}break;
 		case 1:													// 车
@@ -245,7 +220,7 @@ struct State{
 					ch.addmove(7);
 				}
 			}
-			else if(x-1==sx && sx!=0 && y==sy){
+			if(x-1==sx && sx!=0 && y==sy){
 				if(y!=0 && (!has(x-2, y-1) || (get(x-2, y-1).isred()^side))){
 					ch.addmove(5);
 				}
@@ -253,7 +228,7 @@ struct State{
 					ch.addmove(3);
 				}
 			}
-			else if(y+1==sy && sy!=9 && x==sx){
+			if(y+1==sy && sy!=9 && x==sx){
 				if(x!=0 && (!has(x-1, y+2) || (get(x-1, y+2).isred()^side))){
 					ch.addmove(2);
 				}
@@ -261,7 +236,7 @@ struct State{
 					ch.addmove(0);
 				}
 			}
-			else if(y-1==sy && sy!=0 && x==sx){
+			if(y-1==sy && sy!=0 && x==sx){
 				if(x!=8 && (!has(x+1, y-2) || (get(x+1, y-2).isred()^side))){
 					ch.addmove(6);
 				}
@@ -269,64 +244,64 @@ struct State{
 					ch.addmove(4);
 				}
 			}
-			else if(x+2==sx){
+			if(x+2==sx){
 				if(!has(x+1, y)){
 					if(y+1==sy)ch.addmove(1);
-					else if(y-1==sy)ch.addmove(7);
+					if(y-1==sy)ch.addmove(7);
 				}
 			}
-			else if(y-2==sy){
+			if(y-2==sy){
 				if(!has(x, y-1)){
 					if(x+1==sx)ch.addmove(6);
-					else if(x-1==sx)ch.addmove(4);
+					if(x-1==sx)ch.addmove(4);
 				}
 			}
-			else if(x-2==sx){
+			if(x-2==sx){
 				if(!has(x-1, y)){
 					if(y-1==sy)ch.addmove(5);
-					else if(y+1==sy)ch.addmove(3);
+					if(y+1==sy)ch.addmove(3);
 				}
 			}
-			else if(y+2==sy){
+			if(y+2==sy){
 				if(!has(x, y+1)){
 					if(x+1==sx)ch.addmove(0);
-					else if(x-1==sx)ch.addmove(2);
+					if(x-1==sx)ch.addmove(2);
 				}
 			}
 			if(x+1==ex && ex!=8 && y==ey){						// 马腿被别
 				ch.remmove(1, 7);
 			}
-			else if(x-1==ex && ex!=0 && y==ey){
+			if(x-1==ex && ex!=0 && y==ey){
 				ch.remmove(3, 5);
 			}
-			else if(y+1==ey && ey!=9 && x==ex){
+			if(y+1==ey && ey!=9 && x==ex){
 				ch.remmove(0, 2);
 			}
-			else if(y-1==ey && ey!=0 && x==ex){
+			if(y-1==ey && ey!=0 && x==ex){
 				ch.remmove(4, 6);
 			}
-			else if(x+2==ex){
+			if(x+2==ex){
 				if(!has(x+1, y)){
 					if(y+1==ey)ch.setmove(1, test);
-					else if(y-1==ey)ch.setmove(7, test);
+					if(y-1==ey)ch.setmove(7, test);
 				}
 			}
-			else if(y-2==ey){
+			if(y-2==ey){
 				if(!has(x, y-1)){
 					if(x+1==ex)ch.setmove(6, test);
-					else if(x-1==ex)ch.setmove(4, test);
+					if(x-1==ex)ch.setmove(4, test);
 				}
 			}
-			else if(x-2==ex){
+			if(x-2==ex){
 				if(!has(x-1, y)){
 					if(y-1==ey)ch.setmove(5, test);
-					else if(y+1==ey)ch.setmove(3, test);
+					if(y+1==ey)ch.setmove(3, test);
 				}
 			}
-			else if(y+2==ey){
+			if(y+2==ey){
 				if(!has(x, y+1)){
 					if(x-1==ex)ch.setmove(2, test);
-					else if(x+1==ex)ch.setmove(0, test);
+					if(x+1==ex)ch.setmove(0, test);
 				}
 			}
 		}break;
@@ -385,7 +360,7 @@ struct State{
 				if(sx==4 && sy==(ch.isred()?1:8)){
 					ch.addmove(side*2+(ch.x()==3));
 				}
-				else if(ex==4 && ey==(ch.isred()?1:8)){
+				if(ex==4 && ey==(ch.isred()?1:8)){
 					ch.setmove(side*2+(ch.x()==3), test);
 				}
 			}
@@ -415,254 +390,19 @@ struct State{
 				}
 			}
 		}break;
-		}
-	}
-	void updateMove2(const char sx, const char sy, const char ex, const char ey, Mana& ch){
-		char x=ch.x(), y=ch.y();
-		const bool test=false;
-		bool side=ch.isred();
-		switch(ch.shape()){
-		case 6:													// 兵
-		{
-			if(x==sx && y==(side?sy-1:sy+1)){
-				ch.addmove(side);
-			}
-			else if(x==ex && y==(side?ey-1:ey+1)){
-				ch.setmove(side, test);
-			}
-			if(side?y>=5:y<=4){
-				if(y==sy){
-					if(x==sx+1)ch.addmove(2);
-					if(x==sx-1)ch.addmove(3);
-				}
-				if(y==ey){
-					if(x==ex+1)ch.setmove(2, test);
-					if(x==ex-1)ch.setmove(3, test);
-				}
-			}
-		}break;
 		case 7:													// 将帅
 		{
 			if(sx>=3 && sx<=5 && (side?sy<=2:sy>=7)){
 				if(sx==x && sy+1==y)ch.addmove(0);
-				else if(sx==x && sy-1==y)ch.addmove(1);
-				else if(sx+1==x && sy==y)ch.addmove(2);
-				else if(sx-1==x && sy==y)ch.addmove(3);
+				if(sx==x && sy-1==y)ch.addmove(1);
+				if(sx+1==x && sy==y)ch.addmove(2);
+				if(sx-1==x && sy==y)ch.addmove(3);
 			}
 			if(ex>=3 && ex<=5 && (side?ey<=2:ey>=7)){
 				if(ex==x && ey+1==y)ch.setmove(0, test);
-				else if(ex==x && ey-1==y)ch.setmove(1, test);
-				else if(ex+1==x && ey==y)ch.setmove(2, test);
-				else if(ex-1==x && ey==y)ch.setmove(3, test);
-			}
-		}break;
-		case 1:													// 车
-		{
-			if(sy==y || ey==y){
-				ch.moves&=0xFFC00;
-				for(char nx=x-1; nx>=0; nx--)if(has(nx, y)){
-					if(get(nx, y).isred()^side)ch.addmove(nx);
-					break;
-				}
-				else ch.addmove(nx);
-				for(char nx=x+1; nx<=8; nx++)if(has(nx, y)){
-					if(get(nx, y).isred()^side)ch.addmove(nx);
-					break;
-				}
-				else ch.addmove(nx);
-			}
-			if(sx==x || ex==x){
-				ch.moves&=0x3FF;
-				for(char ny=y-1; ny>=0; ny--)if(has(x, ny)){
-					if(get(x, ny).isred()^side)ch.addmove(ny+10);
-					break;
-				}
-				else ch.addmove(ny+10);
-				for(char ny=y+1; ny<=9; ny++)if(has(x, ny)){
-					if(get(x, ny).isred()^side)ch.addmove(ny+10);
-					break;
-				}
-				else ch.addmove(ny+10);
-			}
-		}break;
-		case 2:													// 马
-		{
-			if(x+1==sx && sx!=8 && y==sy){						// 马腿移开的情况
-				if(y!=9 && (!has(x+2, y+1) || (get(x+2, y+1).isred()^side))){
-					ch.addmove(1);
-				}
-				if(y!=0 && (!has(x+2, y-1) || (get(x+2, y-1).isred()^side))){
-					ch.addmove(7);
-				}
-			}
-			else if(x-1==sx && sx!=0 && y==sy){
-				if(y!=0 && (!has(x-2, y-1) || (get(x-2, y-1).isred()^side))){
-					ch.addmove(5);
-				}
-				if(y!=9 && (!has(x-2, y+1) || (get(x-2, y+1).isred()^side))){
-					ch.addmove(3);
-				}
-			}
-			else if(y+1==sy && sy!=9 && x==sx){
-				if(x!=0 && (!has(x-1, y+2) || (get(x-1, y+2).isred()^side))){
-					ch.addmove(2);
-				}
-				if(x!=8 && (!has(x+1, y+2) || (get(x+1, y+2).isred()^side))){
-					ch.addmove(0);
-				}
-			}
-			else if(y-1==sy && sy!=0 && x==sx){
-				if(x!=8 && (!has(x+1, y-2) || (get(x+1, y-2).isred()^side))){
-					ch.addmove(6);
-				}
-				if(x!=0 && (!has(x-1, y-2) || (get(x-1, y-2).isred()^side))){
-					ch.addmove(4);
-				}
-			}
-			else if(x+2==sx){
-				if(!has(x+1, y)){
-					if(y+1==sy)ch.addmove(1);
-					else if(y-1==sy)ch.addmove(7);
-				}
-			}
-			else if(y-2==sy){
-				if(!has(x, y-1)){
-					if(x+1==sx)ch.addmove(6);
-					else if(x-1==sx)ch.addmove(4);
-				}
-			}
-			else if(x-2==sx){
-				if(!has(x-1, y)){
-					if(y-1==sy)ch.addmove(5);
-					else if(y+1==sy)ch.addmove(3);
-				}
-			}
-			else if(y+2==sy){
-				if(!has(x, y+1)){
-					if(x+1==sx)ch.addmove(0);
-					else if(x-1==sx)ch.addmove(2);
-				}
-			}
-			if(x+1==ex && ex!=8 && y==ey){						// 马腿被别
-				ch.remmove(1, 7);
-			}
-			else if(x-1==ex && ex!=0 && y==ey){
-				ch.remmove(3, 5);
-			}
-			else if(y+1==ey && ey!=9 && x==ex){
-				ch.remmove(0, 2);
-			}
-			else if(y-1==ey && ey!=0 && x==ex){
-				ch.remmove(4, 6);
-			}
-			else if(x+2==ex){
-				if(!has(x+1, y)){
-					if(y+1==ey)ch.setmove(1, test);
-					else if(y-1==ey)ch.setmove(7, test);
-				}
-			}
-			else if(y-2==ey){
-				if(!has(x, y-1)){
-					if(x+1==ex)ch.setmove(6, test);
-					else if(x-1==ex)ch.setmove(4, test);
-				}
-			}
-			else if(x-2==ex){
-				if(!has(x-1, y)){
-					if(y-1==ey)ch.setmove(5, test);
-					else if(y+1==ey)ch.setmove(3, test);
-				}
-			}
-			else if(y+2==ey){
-				if(!has(x, y+1)){
-					if(x-1==ex)ch.setmove(2, test);
-					else if(x+1==ex)ch.setmove(0, test);
-				}
-			}
-		}break;
-		case 3:													// 炮
-		{
-			if(y==sy || y==ey){
-				ch.moves&=0xFFC00;
-				for(char x=ch.x()-1; x>=0; x--)if(has(x, y)){
-					for(char x2=x-1; x2>=0; x2--)if(has(x2, y)){
-						if(get(x2, y).isred()^side)ch.addmove(x2);
-						break;
-					}
-					break;
-				}
-				else ch.addmove(x);
-				for(char x=ch.x()+1; x<=8; x++)if(has(x, y)){
-					for(char x2=x+1; x2<=8; x2++)if(has(x2, y)){
-						if(get(x2, y).isred()^side)ch.addmove(x2);
-						break;
-					}
-					break;
-				}
-				else ch.addmove(x);
-			}
-			if(x==sx || x==ex){
-				ch.moves&=0x3FF;
-				for(char y=ch.y()-1; y>=0; y--)if(has(x, y)){
-					for(char y2=y-1; y2>=0; y2--)if(has(x, y2)){
-						if(get(x, y2).isred()^side)ch.addmove(y2+10);
-						break;
-					}
-					break;
-				}
-				else ch.addmove(y+10);
-				for(char y=ch.y()+1; y<=9; y++)if(has(x, y)){
-					for(char y2=y+1; y2<=9; y2++)if(has(x, y2)){
-						if(get(x, y2).isred()^side)ch.addmove(y2+10);
-						break;
-					}
-					break;
-				}
-				else ch.addmove(y+10);
-			}
-		}break;
-		case 4:													// 士
-		{
-			if(ch.shown()){
-				if((x==sx+1||x==sx-1)&&(y==sy+1||y==sy-1)){
-					ch.addmove((x+1==sx)+(y+1==sy)*2);
-				}
-				if((x==ex+1||x==ex-1)&&(y==ey+1||y==ey-1)){
-					ch.setmove((x+1==ex)+(y+1==ey)*2, test);
-				}
-			}
-			else{
-				if(sx==4 && sy==(ch.isred()?1:8)){
-					ch.addmove(side*2+(ch.x()==3));
-				}
-				else if(ex==4 && ey==(ch.isred()?1:8)){
-					ch.setmove(side*2+(ch.x()==3), test);
-				}
-			}
-		}break;
-		case 5:													// 相
-		{
-			if(((x==sx-1||x==sx+1) && (y==sy-1||y==sy+1))		// 相眼
-				|| ((x==sx-2||x==sx+2) && (y==sy-2||y==sy+2))
-				|| ((x==ex-1||x==ex+1) && (y==ey-1||y==ey+1))
-				|| ((x==ex-2||x==ex+2) && (y==ey-2||y==ey+2))){
-				ch.moves=0;
-				if(y>1){
-					if(x>1 && !has(x-1, y-1) && (!has(x-2, y-2) || (get(x-2, y-2).isred()^side))){
-						ch.addmove(0);
-					}
-					if(x<8 && !has(x+1, y-1) && (!has(x+2, y-2) || (get(x+2, y-2).isred()^side))){
-						ch.addmove(1);
-					}
-				}
-				if(y<8){
-					if(x>1 && !has(x-1, y+1) && (!has(x-2, y+2) || (get(x-2, y+2).isred()^side))){
-						ch.addmove(2);
-					}
-					if(x<8 && !has(x+1, y+1) && (!has(x+2, y+2) || (get(x+2, y+2).isred()^side))){
-						ch.addmove(3);
-					}
-				}
+				if(ex==x && ey-1==y)ch.setmove(1, test);
+				if(ex+1==x && ey==y)ch.setmove(2, test);
+				if(ex-1==x && ey==y)ch.setmove(3, test);
 			}
 		}break;
 		}
@@ -862,7 +602,6 @@ struct State{
 		const static int sc[]={0,120,60,60,50,30,20,50000};
 		const static int pw[]={0,6,4,5,4,3,4,2};
 		int ret=0;
-		
 		int mid=0;
 		for(int i=1; i<8; i++)mid+=sc[i]*hid[side][i];
 		mid/=tothid[side];
@@ -901,7 +640,7 @@ struct Node{
 	//vector<Node*> v;						// 孩子们
 	//Node* to;								// 大儿子
 	int score;								// 此节点的评分
-	bool operator<(const Node& b) const;
+	//bool operator<(const Node& b) const;
 	void show() const{
 		printf("(%d,%d)->(%d,%d) %d\n", sx, sy, ex, ey, score);
 	}
@@ -910,8 +649,10 @@ struct Node{
 	}
 }__;
 
-int MAGIC_SCORE[8100];
 const int inf=100000;
+
+/*
+int MAGIC_SCORE[8100];
 
 bool Node::operator< (const Node& b) const{	// 用于sort
 	return MAGIC_SCORE[hash()]>MAGIC_SCORE[b.hash()];	
@@ -921,6 +662,7 @@ bool Node::operator< (const Node& b) const{	// 用于sort
 void updateMagic(const Node& b){
 	MAGIC_SCORE[b.hash()]=MAGIC_SCORE[b.hash()]*0.7 + b.score;
 }
+*/
 
 State _;
 
@@ -1030,11 +772,10 @@ void old_wide_dfs(Node& root, State& s, bool side, int depth){
 	if(depth>=3)b->show();
 }
 
+/*
 void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 	if(depth==0){
-		//showState(s);
 		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
-		//printf("Score = %d.\n", root.score);
 		return;
 	}
 
@@ -1053,7 +794,22 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 			for(int i=1; i<7; i++)if(s.hid[side][i]){
 				temp.flushOut(n.ex, n.ey, i);
 				temp.calcMove(temp.get(n.ex, n.ey));
-				wide_dfs(n, temp, !side, depth-1, -beta, inf);
+				range_dfs(n, temp, !side, depth-1, 0, 10);
+				totscore+=n.score*s.hid[side][i];
+			}
+			n.score=totscore/s.tothid[side];
+			int now=-n.score;
+
+			if(now>root.score){
+				root.score=now;
+				if(now>=beta)break;
+			}
+
+			totscore = 0;
+			for(int i=1; i<7; i++)if(s.hid[side][i]){
+				temp.flushOut(n.ex, n.ey, i);
+				temp.calcMove(temp.get(n.ex, n.ey));
+				wide_dfs(n, temp, !side, depth-1, -inf, inf);
 				totscore+=n.score*s.hid[side][i];
 			}
 			n.score=totscore/s.tothid[side];
@@ -1061,7 +817,6 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 		else{
 			wide_dfs(n, temp, !side, depth-1, -beta, -alpha);
 		}
-
 		int now=-n.score;
 		if(now>root.score){
 			root.score=now;
@@ -1074,6 +829,7 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 	}
 	if(depth>=3)b->show();
 }
+*/
 
 void show_result(Node& root){
 }
@@ -1107,11 +863,7 @@ int main(){
 
 			time_t i=clock();
 			old_wide_dfs(__, _, side, 3);
-			printf("old_wide cost %d ms\n", (int)(clock()-i));
-			show_result(__);
-			i=clock();
-			wide_dfs(__, _, side, 3, -inf, inf);
-			printf("wide cost %d ms\n", (int)(clock()-i));
+			printf("old_move_wide cost %d ms\n", (int)(clock()-i));
 		}
 		else if(command=="debug"){
 			cin>>command;
