@@ -137,10 +137,12 @@ struct State{
 
 		bd[ex][ey]=bd[sx][sy];									// 改变棋盘指针
 		bd[sx][sy]=-1;
+	}
 
+	void calcMoves(){
 		for(int i=0; i<32; i++)if(!ch[0][i].eaten()){			// 更新棋子移动
-				calcMove(ch[0][i]);
-			}
+			calcMove(ch[0][i]);
+		}
 	}
 
 	// 翻开一颗子
@@ -739,9 +741,9 @@ void State::perfMove(int side, vector<Node>& v){
 
 void old_wide_dfs(Node& root, State& s, bool side, int depth){
 	if(depth==0){
-		//showState(s);
 		root.score=s.getScore(side)-s.getScore(!side);	// 计算当前场面得分
-		//printf("Score = %d.\n", root.s.score);
+		//  showState(s);
+		//  printf("Score = %d.\n", root.s.score);
 		return;
 	}
 	vector<Node> Vec;
@@ -794,21 +796,6 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 			for(int i=1; i<7; i++)if(s.hid[side][i]){
 				temp.flushOut(n.ex, n.ey, i);
 				temp.calcMove(temp.get(n.ex, n.ey));
-				range_dfs(n, temp, !side, depth-1, 0, 10);
-				totscore+=n.score*s.hid[side][i];
-			}
-			n.score=totscore/s.tothid[side];
-			int now=-n.score;
-
-			if(now>root.score){
-				root.score=now;
-				if(now>=beta)break;
-			}
-
-			totscore = 0;
-			for(int i=1; i<7; i++)if(s.hid[side][i]){
-				temp.flushOut(n.ex, n.ey, i);
-				temp.calcMove(temp.get(n.ex, n.ey));
 				wide_dfs(n, temp, !side, depth-1, -inf, inf);
 				totscore+=n.score*s.hid[side][i];
 			}
@@ -830,9 +817,6 @@ void wide_dfs(Node& root, State& s, bool side, int depth, int alpha, int beta){
 	if(depth>=3)b->show();
 }
 */
-
-void show_result(Node& root){
-}
 
 int main(){
 	//freopen("Input.in", "r", stdin);
